@@ -10,7 +10,7 @@ The GitHub API requires authentication. For simplicity, this app doesn't authori
 
 To run this project:
   - Create a `.env` file at the root of the project.
-  - Add your personal access token: `REACT_APP_GITHUB_TOKEN=yourgithubtoken
+  - Add your personal access token: `REACT_APP_GITHUB_TOKEN=yourgithubtoken`
   - `yarn` or `npm install`
   - `npm start`
 
