@@ -1,5 +1,5 @@
 import React from 'react';
-import { lifecycle, compose, withState, withProps } from 'recompose';
+import { lifecycle, compose, withState, withProps, withHandlers } from 'recompose';
 
 const gitHubToken = process.env.REACT_APP_GITHUB_TOKEN;
 
@@ -34,9 +34,9 @@ const viewerQuery =
   }
 }`;
 
-const issueCommentMutation = (issueId) =>
+const issueCommentMutation = (issueId, comment) =>
 `mutation AddCommentToIssue {
-  addComment(input:{subjectId:"${issueId}",clientMutationId:"${gitHubToken}",body:"noice"}) {
+  addComment(input:{subjectId:"${issueId}",clientMutationId:"${gitHubToken}",body:"${comment}"}) {
     subject {
       id
     }
@@ -49,26 +49,43 @@ const issueCommentMutation = (issueId) =>
   }
 }`;
 
+const Issue = ({ title, id, comment, onChange, onSubmit }) => (
+  <form onSubmit={onSubmit}>
+    <h3>{title}</h3>
+    <textarea name={`${id}-comment`} onChange={onChange} value={comment} />
+    <button type="submit">Send comment</button>
+  </form>
+);
+
+const ConnectedIssue = compose(
+  withState('comment', 'setComment', ''),
+  withHandlers({
+    onChange: ({ setComment }) => ({ target: { value } }) => {
+      setComment(value);
+    },
+    onSubmit: ({ id, comment }) => e => {
+      e.preventDefault();
+      sendQuery(
+        'AddCommentToIssue',
+        issueCommentMutation(id, comment)
+      );
+    },
+  })
+)(Issue);
+
 const Me = ({ login, repos = [] }) => (
   <div>
     <h1>{login}</h1>
-    <h2>Issues</h2>
     <ul>
       {repos.map(({ name, id: repoId, issues: { nodes } }) => (
         <li key={repoId}>
-          <h3>{name}</h3>
+          <h2>{name}</h2>
           <ol>
-            {nodes.map(({ title, id: issueId }) => (
-              <li key={issueId}>
-                {title}&nbsp;
-                <button
-                  onClick={() => {
-                    sendQuery('AddCommentToIssue', issueCommentMutation(issueId))
-                  }}
-                >
-                  Add comment
-                </button>
-              </li>
+            {nodes.map(issue => (
+              <ConnectedIssue
+                key={issue.id}
+                {...issue}
+              />
             ))}
           </ol>
         </li>
