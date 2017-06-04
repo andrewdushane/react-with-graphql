@@ -1,5 +1,6 @@
 import React from 'react';
 import { lifecycle, compose, withState, withProps, withHandlers } from 'recompose';
+import moment from 'moment';
 
 const gitHubToken = process.env.REACT_APP_GITHUB_TOKEN;
 
@@ -68,9 +69,9 @@ const Issue = ({ title, id, comment, onChange, onSubmit, comments, number }) => 
     {comments.nodes.length > 0 && <h4>Comments:</h4>}
     {comments.nodes.length > 0 && (
       <ul>
-        {comments.nodes.map(({ body, id: commentId }) => (
+        {comments.nodes.map(({ body, id: commentId, publishedAt }) => (
           <li key={commentId}>
-            {body}
+            {body} - {moment(publishedAt).fromNow()}
           </li>
         ))}
       </ul>
@@ -83,7 +84,7 @@ const Issue = ({ title, id, comment, onChange, onSubmit, comments, number }) => 
         value={comment}
         placeholder="Enter your comment here"
       />
-      <button type="submit">Send comment</button>
+      <button type="submit" disabled={!comment}>Send comment</button>
     </form>
   </div>
 );
