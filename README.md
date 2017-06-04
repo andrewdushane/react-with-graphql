@@ -2,6 +2,11 @@
 
 [GraphQL](http://graphql.org/) is all about developer experience, both for the client and server. Developing React apps can be faster and smoother with a GraphQL API.
 
+For large applications, you'll probably want to use a framework, as much of the hard work has been done for you - combining requests, error handling, loading status, etc.  
+The two most popular GraphQL frameworks for use with React are:  
+  - Facebook's [Relay](https://facebook.github.io/relay/)
+  - [Apollo](http://dev.apollodata.com/react/)
+
 This demo project uses the [GitHub v4 GraphQL API](https://developer.github.com/v4/)  
 To view the docs, you'll need to join the Early Access program
 
