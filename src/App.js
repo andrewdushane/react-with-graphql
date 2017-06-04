@@ -34,6 +34,9 @@ const viewerQuery =
                 body
                 id
                 publishedAt
+                author {
+                  login
+                }
               }
             }
           }
@@ -69,9 +72,9 @@ const Issue = ({ title, id, comment, onChange, onSubmit, comments, number }) => 
     {comments.nodes.length > 0 && <h4>Comments:</h4>}
     {comments.nodes.length > 0 && (
       <ul>
-        {comments.nodes.map(({ body, id: commentId, publishedAt }) => (
+        {comments.nodes.map(({ body, id: commentId, publishedAt, author: { login } }) => (
           <li key={commentId}>
-            {body} - {moment(publishedAt).fromNow()}
+            <strong>{body}</strong> - by {login} {moment(publishedAt).fromNow()}
           </li>
         ))}
       </ul>

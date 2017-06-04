@@ -16,6 +16,10 @@ ul {
   list-style: none;
 }
 
+li {
+  margin-bottom: 0.5rem;
+}
+
 form {
   margin-top: 2rem;
 }
