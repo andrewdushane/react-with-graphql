@@ -27,10 +27,12 @@ const viewerQuery =
           nodes {
             title
             id
+            number
             comments(last: 20) {
               nodes {
                 body
                 id
+                publishedAt
               }
             }
           }
@@ -39,6 +41,11 @@ const viewerQuery =
     }
   }
 }`;
+
+const processViewerQuery = setUser =>
+  sendQuery('ViewerQuery', viewerQuery)
+    .then(response => response.json())
+    .then(json => json.data && setUser(json.data.viewer));
 
 const issueCommentMutation = (issueId, comment) =>
 `mutation AddCommentToIssue {
@@ -55,17 +62,30 @@ const issueCommentMutation = (issueId, comment) =>
   }
 }`;
 
-const Issue = ({ title, id, comment, onChange, onSubmit, comments }) => (
-  <form onSubmit={onSubmit}>
-    <h3>{title}</h3>
-    {comments.nodes.map(({ body, id: commentId }) => (
-      <div key={commentId}>
-        {body}
-      </div>
-    ))}
-    <textarea name={`${id}-comment`} onChange={onChange} value={comment} />
-    <button type="submit">Send comment</button>
-  </form>
+const Issue = ({ title, id, comment, onChange, onSubmit, comments, number }) => (
+  <div>
+    <h3>Issue #{number}: {title}</h3>
+    {comments.nodes.length > 0 && <h4>Comments:</h4>}
+    {comments.nodes.length > 0 && (
+      <ul>
+        {comments.nodes.map(({ body, id: commentId }) => (
+          <li key={commentId}>
+            {body}
+          </li>
+        ))}
+      </ul>
+    )}
+    <form onSubmit={onSubmit}>
+      <label htmlFor={`${id}-comment`}>Leave a comment:</label>
+      <textarea
+        name={`${id}-comment`}
+        onChange={onChange}
+        value={comment}
+        placeholder="Enter your comment here"
+      />
+      <button type="submit">Send comment</button>
+    </form>
+  </div>
 );
 
 const ConnectedIssue = compose(
@@ -74,19 +94,20 @@ const ConnectedIssue = compose(
     onChange: ({ setComment }) => ({ target: { value } }) => {
       setComment(value);
     },
-    onSubmit: ({ id, comment }) => e => {
+    onSubmit: ({ id, comment, setComment, setUser }) => e => {
       e.preventDefault();
+      setComment('');
       sendQuery(
         'AddCommentToIssue',
         issueCommentMutation(id, comment)
-      );
+      ).then(() => processViewerQuery(setUser));
     },
   })
 )(Issue);
 
-const Me = ({ login, repos = [] }) => (
-  <div>
-    <h1>{login}</h1>
+const Me = ({ login, repos = [], setUser }) => (
+  <div className="me">
+    <h1>{login}: repositories</h1>
     <ul>
       {repos.map(({ name, id: repoId, issues: { nodes } }) => (
         <li key={repoId}>
@@ -95,6 +116,7 @@ const Me = ({ login, repos = [] }) => (
             {nodes.map(issue => (
               <ConnectedIssue
                 key={issue.id}
+                setUser={setUser}
                 {...issue}
               />
             ))}
@@ -109,9 +131,7 @@ const MeWithData = compose(
   withState('user', 'setUser'),
   lifecycle({
     componentDidMount() {
-      sendQuery('ViewerQuery', viewerQuery)
-        .then(response => response.json())
-        .then(json => this.props.setUser(json.data.viewer));
+      processViewerQuery(this.props.setUser);
     }
   }),
   withProps(({ user }) => user ? ({
