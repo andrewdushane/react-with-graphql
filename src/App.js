@@ -27,6 +27,12 @@ const viewerQuery =
           nodes {
             title
             id
+            comments(last: 20) {
+              nodes {
+                body
+                id
+              }
+            }
           }
         }
       }
@@ -49,9 +55,14 @@ const issueCommentMutation = (issueId, comment) =>
   }
 }`;
 
-const Issue = ({ title, id, comment, onChange, onSubmit }) => (
+const Issue = ({ title, id, comment, onChange, onSubmit, comments }) => (
   <form onSubmit={onSubmit}>
     <h3>{title}</h3>
+    {comments.nodes.map(({ body, id: commentId }) => (
+      <div key={commentId}>
+        {body}
+      </div>
+    ))}
     <textarea name={`${id}-comment`} onChange={onChange} value={comment} />
     <button type="submit">Send comment</button>
   </form>
