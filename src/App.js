@@ -3,18 +3,20 @@ import { lifecycle, compose, withState, withProps } from 'recompose';
 
 const gitHubToken = process.env.REACT_APP_GITHUB_TOKEN;
 
-const sendQuery = query => fetch('https://api.github.com/graphql', {
-  headers: {
-    'Authorization': `basic ${gitHubToken}`,
-  },
-  method: 'POST',
-  body: JSON.stringify({
-    query,
-  }),
-});
+const sendQuery = (operationName, query) =>
+  fetch('https://api.github.com/graphql', {
+    headers: {
+      'Authorization': `basic ${gitHubToken}`,
+    },
+    method: 'POST',
+    body: JSON.stringify({
+      operationName,
+      query,
+    }),
+  });
 
 const usersQuery =
-`{
+`query UsersQuery {
   organization(login:"github") {
     members(first: 100) {
       edges {
@@ -28,12 +30,12 @@ const usersQuery =
   }
 }`;
 
-const viewerQuery = `{
+const viewerQuery =
+`query ViewerQuery {
   viewer {
     login
   }
-}
-`
+}`;
 
 const Me = ({ login }) => (
   <h1>Your login: {login}</h1>
@@ -43,9 +45,9 @@ const MeWithData = compose(
   withState('login', 'setLogin', ''),
   lifecycle({
     componentDidMount() {
-      sendQuery(viewerQuery).then(response => response.json().then(json =>
-        this.props.setLogin(json.data.viewer.login)
-      ));
+      sendQuery('ViewerQuery', viewerQuery)
+        .then(response => response.json())
+        .then(json => this.props.setLogin(json.data.viewer.login));
     }
   })
 )(Me);
@@ -62,9 +64,13 @@ export default compose(
   withState('users', 'setUsers', []),
   lifecycle({
     componentDidMount() {
-      sendQuery(usersQuery).then(response => response.json().then(json => {
-        this.props.setUsers(json.data.organization.members.edges.map(({ node }) => node))
-      }))
+      sendQuery('UsersQuery', usersQuery)
+        .then(response => response.json())
+        .then(json => {
+          this.props.setUsers(
+            json.data.organization.members.edges.map(({ node }) => node)
+          )
+        });
     }
   }),
 )(App);
