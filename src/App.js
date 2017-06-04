@@ -34,6 +34,21 @@ const viewerQuery =
   }
 }`;
 
+const issueCommentMutation = (issueId) =>
+`mutation AddCommentToIssue {
+  addComment(input:{subjectId:"${issueId}",clientMutationId:"${gitHubToken}",body:"noice"}) {
+    subject {
+      id
+    }
+    clientMutationId
+    commentEdge {
+      node {
+        body
+      }
+    }
+  }
+}`;
+
 const Me = ({ login, repos = [] }) => (
   <div>
     <h1>{login}</h1>
@@ -45,7 +60,14 @@ const Me = ({ login, repos = [] }) => (
           <ol>
             {nodes.map(({ title, id: issueId }) => (
               <li key={issueId}>
-                {title}
+                {title}&nbsp;
+                <button
+                  onClick={() => {
+                    sendQuery('AddCommentToIssue', issueCommentMutation(issueId))
+                  }}
+                >
+                  Add comment
+                </button>
               </li>
             ))}
           </ol>
