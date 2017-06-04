@@ -15,62 +15,61 @@ const sendQuery = (operationName, query) =>
     }),
   });
 
-const usersQuery =
-`query UsersQuery {
-  organization(login:"github") {
-    members(first: 100) {
-      edges {
-        node {
-          name
-          avatarUrl
-          id
+const viewerQuery =
+`query ViewerQuery {
+  viewer {
+    login
+    repositories(last: 20) {
+      nodes {
+        name
+        id
+        issues(last: 20) {
+          nodes {
+            title
+            id
+          }
         }
       }
     }
   }
 }`;
 
-const viewerQuery =
-`query ViewerQuery {
-  viewer {
-    login
-  }
-}`;
-
-const Me = ({ login }) => (
-  <h1>Your login: {login}</h1>
+const Me = ({ login, repos = [] }) => (
+  <div>
+    <h1>{login}</h1>
+    <h2>Issues</h2>
+    <ul>
+      {repos.map(({ name, id: repoId, issues: { nodes } }) => (
+        <li key={repoId}>
+          <h3>{name}</h3>
+          <ol>
+            {nodes.map(({ title, id: issueId }) => (
+              <li key={issueId}>
+                {title}
+              </li>
+            ))}
+          </ol>
+        </li>
+      ))}
+    </ul>
+  </div>
 );
 
 const MeWithData = compose(
-  withState('login', 'setLogin', ''),
+  withState('user', 'setUser'),
   lifecycle({
     componentDidMount() {
       sendQuery('ViewerQuery', viewerQuery)
         .then(response => response.json())
-        .then(json => this.props.setLogin(json.data.viewer.login));
-    }
-  })
-)(Me);
-
-const App = ({ users }) => (
-  <div>
-    <MeWithData />
-    <h2>Users</h2>
-    {users.map(({ name, id }) => <div key={id}>{name}</div>)}
-  </div>
-);
-
-export default compose(
-  withState('users', 'setUsers', []),
-  lifecycle({
-    componentDidMount() {
-      sendQuery('UsersQuery', usersQuery)
-        .then(response => response.json())
-        .then(json => {
-          this.props.setUsers(
-            json.data.organization.members.edges.map(({ node }) => node)
-          )
-        });
+        .then(json => this.props.setUser(json.data.viewer));
     }
   }),
-)(App);
+  withProps(({ user }) => user ? ({
+    login: user.login,
+    repos: user.repositories.nodes,
+  }) : {}),
+)(Me);
+
+const App = () => <MeWithData />;
+
+export default App;
