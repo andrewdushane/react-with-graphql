@@ -13,6 +13,7 @@ The two most popular GraphQL frameworks for use with React are:
   - [Thinking in GraphQL](https://facebook.github.io/relay/docs/thinking-in-graphql.html)
   - [graphiql](https://github.com/graphql/graphiql)
   - [GitHub v4 GraphQL API](https://developer.github.com/v4/)
+  - [Fake](http://fake.graphql.guru/) - mock data. Compare to [JSON Placeholder](https://jsonplaceholder.typicode.com/)
 
 
 ## GitHub GraphQL API
