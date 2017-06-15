@@ -53,7 +53,7 @@ const processViewerQuery = setUser =>
 
 const issueCommentMutation = (issueId, comment) =>
 `mutation AddCommentToIssue {
-  addComment(input:{subjectId:"${issueId}",clientMutationId:"${gitHubToken}",body:"${comment}"}) {
+  addComment(input:{subjectId:"${issueId}",body:"${comment}"}) {
     subject {
       id
     }
@@ -66,18 +66,29 @@ const issueCommentMutation = (issueId, comment) =>
   }
 }`;
 
-const Issue = ({ title, id, comment, onChange, onSubmit, comments, number }) => (
+const Issue = ({
+  title,
+  id,
+  comment,
+  onChange,
+  onSubmit,
+  hasComments,
+  comments,
+  number,
+}) => (
   <div>
     <h3>Issue #{number}: {title}</h3>
-    {comments.nodes.length > 0 && <h4>Comments:</h4>}
-    {comments.nodes.length > 0 && (
-      <ul>
-        {comments.nodes.map(({ body, id: commentId, publishedAt, author: { login } }) => (
-          <li key={commentId}>
-            <strong>{body}</strong> - by {login} {moment(publishedAt).fromNow()}
-          </li>
-        ))}
-      </ul>
+    {hasComments && (
+      <div>
+        <h4>Comments:</h4>
+        <ul>
+          {comments.map(({ body, id: commentId, publishedAt, author: { login } }) => (
+            <li key={commentId}>
+              <strong>{body}</strong> - by {login} {moment(publishedAt).fromNow()}
+            </li>
+          ))}
+        </ul>
+      </div>
     )}
     <form onSubmit={onSubmit}>
       <label htmlFor={`${id}-comment`}>Leave a comment:</label>
@@ -106,7 +117,11 @@ const ConnectedIssue = compose(
         issueCommentMutation(id, comment)
       ).then(() => processViewerQuery(setUser));
     },
-  })
+  }),
+  withProps(({ comments }) => ({
+    comments: comments.nodes,
+    hasComments: comments.nodes.length > 0,
+  })),
 )(Issue);
 
 const Me = ({ login, repos = [], setUser }) => (
